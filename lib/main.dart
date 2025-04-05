@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
-import 'pages/card_set.dart';
+import 'package:provider/provider.dart';
 import 'pages/folders.dart';
+import 'pages/card_set.dart';
 import 'pages/quiz.dart';
 import 'pages/setting.dart';
+import 'theme/theme_provider.dart';
+
 
 void main() {
   runApp(const MyApp());
@@ -11,18 +14,26 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      initialRoute: '/',
-      routes: {
-        '/': (context) => Folders(),
-        '/cardset': (context) => CardSet(),
-        '/quiz': (context) => Quiz(),
-        '/setting': (context) => Setting(),
-      },
+    return ChangeNotifierProvider(
+      create: (_) => ThemeProvider(),
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, child) {
+          return MaterialApp(
+            title: 'Flashcard App',
+            themeMode: themeProvider.themeMode,
+            theme: ThemeData.light(),
+            darkTheme: ThemeData.dark(),
+            home: Folders(),
+            routes: {
+              '/cardset': (context) => CardSet(),
+              '/quiz': (context) => Quiz(),
+              '/setting': (context) => Setting(),
+            },
+          );
+        },
+      ),
     );
   }
 }

@@ -27,6 +27,8 @@ class _FoldersState extends State<Folders> {
   }
 
   Widget _buildCreateFolderDialog() {
+    final theme = Theme.of(context);
+
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
@@ -35,30 +37,22 @@ class _FoldersState extends State<Folders> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Title and Close Icon
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   "Creating Options",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: theme.textTheme.titleMedium,
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close),
+                  icon: Icon(Icons.close, color: theme.iconTheme.color),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
               ],
             ),
             const SizedBox(height: 16),
-
-            // Label
-            const Text(
-              "Folder name",
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-            ),
+            Text("Folder name", style: theme.textTheme.bodyMedium),
             const SizedBox(height: 8),
-
-            // TextField
             TextField(
               controller: _controller,
               decoration: const InputDecoration(
@@ -67,21 +61,13 @@ class _FoldersState extends State<Folders> {
               ),
             ),
             const SizedBox(height: 20),
-
-            // Create Button
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
                   _addFolder(_controller.text);
-                  Navigator.of(context).pop(); // Close dialog after creation
+                  Navigator.of(context).pop();
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8)),
-                ),
                 child: const Text("Create"),
               ),
             ),
@@ -92,7 +78,7 @@ class _FoldersState extends State<Folders> {
   }
 
   void _showChangeFolderNameDialog(int index) {
-    _controller.text = folders[index]; // Pre-fill with current folder name
+    _controller.text = folders[index];
     showDialog(
       context: context,
       builder: (context) => _buildChangeFolderNameDialog(index),
@@ -100,6 +86,8 @@ class _FoldersState extends State<Folders> {
   }
 
   Widget _buildChangeFolderNameDialog(int index) {
+    final theme = Theme.of(context);
+
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
@@ -108,30 +96,19 @@ class _FoldersState extends State<Folders> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Title and Close Icon
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  "Change Folder Name",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
+                Text("Change Folder Name", style: theme.textTheme.titleMedium),
                 IconButton(
-                  icon: const Icon(Icons.close),
+                  icon: Icon(Icons.close, color: theme.iconTheme.color),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
               ],
             ),
             const SizedBox(height: 16),
-
-            // Label
-            const Text(
-              "New folder name",
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-            ),
+            Text("New folder name", style: theme.textTheme.bodyMedium),
             const SizedBox(height: 8),
-
-            // TextField
             TextField(
               controller: _controller,
               decoration: const InputDecoration(
@@ -140,8 +117,6 @@ class _FoldersState extends State<Folders> {
               ),
             ),
             const SizedBox(height: 20),
-
-            // Change Button
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -151,14 +126,8 @@ class _FoldersState extends State<Folders> {
                     folders[index] = _controller.text.trim();
                     _controller.clear();
                   });
-                  Navigator.of(context).pop(); // Close dialog after change
+                  Navigator.of(context).pop();
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8)),
-                ),
                 child: const Text("Change"),
               ),
             ),
@@ -170,18 +139,20 @@ class _FoldersState extends State<Folders> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: Colors.grey[300],
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.grey[200],
+        backgroundColor: theme.appBarTheme.backgroundColor ?? theme.colorScheme.surface,
         elevation: 0,
-        title: const Text(
+        title: Text(
           'Flash Cards',
-          style: TextStyle(color: Colors.black),
+          style: TextStyle(color: theme.textTheme.titleLarge?.color),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings, color: Colors.black),
+            icon: Icon(Icons.settings, color: theme.iconTheme.color),
             onPressed: () {
               Navigator.pushNamed(context, '/setting');
             },
@@ -192,86 +163,86 @@ class _FoldersState extends State<Folders> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            color: Colors.grey[400],
+            color: theme.colorScheme.secondary.withOpacity(0.1),
             padding: const EdgeInsets.all(16.0),
-            child: const Row(
+            child: Row(
               children: [
-                Icon(Icons.folder, size: 28, color: Colors.black),
-                SizedBox(width: 8),
+                Icon(Icons.folder, size: 28, color: theme.iconTheme.color),
+                const SizedBox(width: 8),
                 Text(
                   'Folders',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                 ),
               ],
             ),
           ),
-          const Divider(height: 1, color: Colors.black),
+          const Divider(height: 1),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: folders.isEmpty
-                  ? _buildEmptyMessage()
-                  : _buildFolderList(),
+                  ? _buildEmptyMessage(theme)
+                  : _buildFolderList(theme),
             ),
           ),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _showCreateFolderDialog,
-        backgroundColor: Colors.grey[300],
-        icon: const Icon(Icons.add, color: Colors.black),
-        label: const Text(
+        backgroundColor: theme.colorScheme.primaryContainer,
+        icon: Icon(Icons.add, color: theme.iconTheme.color),
+        label: Text(
           'New Folder',
-          style: TextStyle(color: Colors.black),
+          style: theme.textTheme.labelLarge,
         ),
       ),
     );
   }
 
-  Widget _buildEmptyMessage() {
+  Widget _buildEmptyMessage(ThemeData theme) {
     return Center(
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.grey[200],
+          color: theme.colorScheme.surfaceVariant,
           borderRadius: BorderRadius.circular(12),
         ),
-        child: const Text(
+        child: Text(
           "There are no folders to display.\nPlease press 'New Folder' to create a folder",
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 14),
+          style: theme.textTheme.bodyMedium,
         ),
       ),
     );
   }
 
-  Widget _buildFolderList() {
+  Widget _buildFolderList(ThemeData theme) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: Colors.grey),
+        color: theme.cardColor,
+        border: Border.all(color: theme.dividerColor),
         borderRadius: BorderRadius.circular(10),
       ),
       child: ListView.builder(
         itemCount: folders.length,
         itemBuilder: (context, index) {
           return ListTile(
-            leading: const Icon(Icons.folder, color: Colors.grey),
-            title: Text(folders[index]),
+            leading: Icon(Icons.folder, color: theme.iconTheme.color),
+            title: Text(folders[index], style: theme.textTheme.bodyLarge),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
-                  icon: const Icon(Icons.quiz, color: Colors.black),
+                  icon: Icon(Icons.quiz, color: theme.iconTheme.color),
                   onPressed: () {
                     // TODO: handle quiz action
                   },
                 ),
                 IconButton(
-                  icon: const Icon(Icons.more_vert, color: Colors.black),
+                  icon: Icon(Icons.more_vert, color: theme.iconTheme.color),
                   onPressed: () {
-                    _showChangeFolderNameDialog(index); // Open change folder dialog
+                    _showChangeFolderNameDialog(index);
                   },
                 ),
               ],
