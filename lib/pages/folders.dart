@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'card_set.dart'; // Adjust the path if it's in a subfolder
+
 
 class Folders extends StatefulWidget {
   const Folders({super.key});
@@ -231,19 +233,16 @@ class _FoldersState extends State<Folders> {
           return ListTile(
             leading: Icon(Icons.folder, color: theme.iconTheme.color),
             title: Text(folders[index], style: theme.textTheme.bodyLarge),
-            onTap: () {
-              Navigator.pushNamed(
-                context,
-                '/cardset', // Navigate to /cardset page
-              );
-            },
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
                   icon: Icon(Icons.quiz, color: theme.iconTheme.color),
                   onPressed: () {
-                    // TODO: handle quiz action
+                    // TODO: Handle quiz action separately
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Quiz icon tapped")),
+                    );
                   },
                 ),
                 IconButton(
@@ -259,4 +258,5 @@ class _FoldersState extends State<Folders> {
       ),
     );
   }
+
 }
