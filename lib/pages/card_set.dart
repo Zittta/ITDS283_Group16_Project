@@ -101,14 +101,92 @@ class _CardSetState extends State<CardSet> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: Text('Card set')),
-      body: Center(child: Text('Card set', style: TextStyle(fontSize: 24))),
-      floatingActionButton: FloatingActionButton(
-        onPressed: (){
-          //task04
-          Navigator.pop(context);
-        },
-        child: Icon(Icons.arrow_back),
+      appBar: AppBar(
+        backgroundColor: theme.colorScheme.surface,
+        elevation: 0,
+        title: const Text('new folder-1'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            // Top buttons
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                ElevatedButton.icon(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.arrow_back),
+                  label: const Text("Back"),
+                ),
+                ElevatedButton.icon(
+                  onPressed: () => _showCardDialog(),
+                  icon: const Icon(Icons.add),
+                  label: const Text("Add Card"),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // Card List
+            Expanded(
+              child: cards.isEmpty
+                  ? Center(
+                      child: Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.surfaceVariant,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Text(
+                          "There are no cards to display.\nPlease press 'Add Card' to create a card",
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    )
+                  : ListView.builder(
+                      itemCount: cards.length,
+                      itemBuilder: (context, index) {
+                        return Container(
+                          margin: const EdgeInsets.symmetric(vertical: 10),
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: theme.cardColor,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.15),
+                                blurRadius: 12,
+                                spreadRadius: 2,
+                                offset: const Offset(0, 6),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            children: [
+                              Text(
+                                cards[index]['title'],
+                                textAlign: TextAlign.center,
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: IconButton(
+                                  icon: const Icon(Icons.edit),
+                                  onPressed: () => _showCardDialog(index: index),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }
