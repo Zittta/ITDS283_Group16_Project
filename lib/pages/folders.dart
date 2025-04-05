@@ -184,7 +184,7 @@ class _FoldersState extends State<Folders> {
               padding: const EdgeInsets.all(16.0),
               child: folders.isEmpty
                   ? _buildEmptyMessage(theme)
-                  : _buildFolderList(theme),
+                  : _buildFolderList(theme), // Use the updated _buildFolderList
             ),
           ),
         ],
@@ -218,6 +218,7 @@ class _FoldersState extends State<Folders> {
     );
   }
 
+  
   Widget _buildFolderList(ThemeData theme) {
     return Container(
       padding: const EdgeInsets.all(12),
@@ -232,15 +233,6 @@ class _FoldersState extends State<Folders> {
           return ListTile(
             leading: Icon(Icons.folder, color: theme.iconTheme.color),
             title: Text(folders[index], style: theme.textTheme.bodyLarge),
-            onTap: () {
-              // Navigate to CardSet on folder icon/title tap
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const CardSet(),
-                ),
-              );
-            },
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
