@@ -247,10 +247,8 @@ class _FoldersState extends State<Folders> {
                 IconButton(
                   icon: Icon(Icons.quiz, color: theme.iconTheme.color),
                   onPressed: () {
-                    // TODO: Handle quiz action separately
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Quiz icon tapped")),
-                    );
+                    // Navigate to the '/quiz' page when the quiz icon is pressed
+                    Navigator.pushNamed(context, '/quiz');
                   },
                 ),
                 IconButton(
@@ -266,5 +264,4 @@ class _FoldersState extends State<Folders> {
       ),
     );
   }
-
 }

@@ -1,16 +1,109 @@
 import 'package:flutter/material.dart';
-class Quiz extends StatelessWidget {
+
+class Quiz extends StatefulWidget {
+  @override
+  _QuizState createState() => _QuizState();
+}
+
+class _QuizState extends State<Quiz> {
+  String? selectedQuestionType = "Front"; // Default value
+  int selectedNumberOfQuestions = 5; // Default number
+
   @override
   Widget build(BuildContext context) {
+    String folderName = "Folder name"; // Replace dynamically if needed
+
     return Scaffold(
-      appBar: AppBar(title: Text('Quiz')),
-      body: Center(child: Text('Quiz', style: TextStyle(fontSize: 24))),
-      floatingActionButton: FloatingActionButton(
-        onPressed: (){
-          //task04
-          Navigator.pop(context);
-        },
-        child: Icon(Icons.arrow_back),
+      appBar: AppBar(
+        title: Text("Let's get Started!"),
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Folder name
+                Text(
+                  folderName,
+                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 40), // Increased spacing
+
+                // Select Question Type label
+                Text(
+                  "Select Question Type:",
+                  style: TextStyle(fontSize: 18),
+                ),
+                SizedBox(height: 20),
+
+                // Radio buttons
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Radio<String>(
+                      value: "Front",
+                      groupValue: selectedQuestionType,
+                      onChanged: (value) {
+                        setState(() {
+                          selectedQuestionType = value;
+                        });
+                      },
+                    ),
+                    Text("Front Question"),
+                    SizedBox(width: 30),
+                    Radio<String>(
+                      value: "Back",
+                      groupValue: selectedQuestionType,
+                      onChanged: (value) {
+                        setState(() {
+                          selectedQuestionType = value;
+                        });
+                      },
+                    ),
+                    Text("Back Question"),
+                  ],
+                ),
+                SizedBox(height: 40), // Increased spacing
+
+                // Number of Questions label
+                Text(
+                  "Number of Questions:",
+                  style: TextStyle(fontSize: 18),
+                ),
+                SizedBox(height: 20),
+
+                // Dropdown
+                DropdownButton<int>(
+                  value: selectedNumberOfQuestions,
+                  onChanged: (int? newValue) {
+                    setState(() {
+                      selectedNumberOfQuestions = newValue!;
+                    });
+                  },
+                  items: [5, 10, 15, 20].map((value) {
+                    return DropdownMenuItem<int>(
+                      value: value,
+                      child: Text("$value"),
+                    );
+                  }).toList(),
+                ),
+                SizedBox(height: 40), // Increased spacing
+
+                // Start Button
+                ElevatedButton(
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("make alert and quizzing UI")),
+                    );
+                  },
+                  child: Text("Start Quiz"),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
