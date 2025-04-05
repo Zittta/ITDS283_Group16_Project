@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'add_edit_card.dart';
+
 
 class CardSet extends StatefulWidget {
   const CardSet({super.key});
@@ -30,72 +32,6 @@ class _CardSetState extends State<CardSet> {
     });
   }
 
-  void _showCardDialog({int? index}) {
-    final titleController = TextEditingController(
-        text: index != null ? cards[index]['title'] : '');
-    final memoController = TextEditingController(
-        text: index != null ? cards[index]['memo'] : '');
-    final List<TextEditingController> answerControllers = List.generate(
-      4,
-      (i) => TextEditingController(
-        text: index != null ? cards[index]['answers'][i] : '',
-      ),
-    );
-
-    showDialog(
-      context: context,
-      builder: (_) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: titleController,
-                decoration: const InputDecoration(labelText: 'Card Title (Question)'),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: memoController,
-                decoration: const InputDecoration(labelText: 'Card Memo'),
-              ),
-              const SizedBox(height: 12),
-              const Text("Answers"),
-              const SizedBox(height: 8),
-              for (int i = 0; i < 4; i++)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: TextField(
-                    controller: answerControllers[i],
-                    decoration: InputDecoration(labelText: 'Answer ${i + 1}'),
-                  ),
-                ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () {
-                  final title = titleController.text.trim();
-                  final memo = memoController.text.trim();
-                  final answers = answerControllers.map((c) => c.text.trim()).toList();
-
-                  if (title.isEmpty || answers.any((a) => a.isEmpty)) return;
-
-                  if (index == null) {
-                    _addCard(title, memo, answers);
-                  } else {
-                    _editCard(index, title, memo, answers);
-                  }
-                  Navigator.of(context).pop();
-                },
-                child: Text(index == null ? 'Add Card' : 'Save Changes'),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -104,7 +40,7 @@ class _CardSetState extends State<CardSet> {
       appBar: AppBar(
         backgroundColor: theme.colorScheme.surface,
         elevation: 0,
-        title: const Text('new folder-1'),
+        title: const Text('New Folder - 1'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -120,7 +56,18 @@ class _CardSetState extends State<CardSet> {
                   label: const Text("Back"),
                 ),
                 ElevatedButton.icon(
-                  onPressed: () => _showCardDialog(),
+                  onPressed: () async {
+                    final newCard = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AddEditCard(index: null), // Add card without editing
+                      ),
+                    );
+
+                    if (newCard != null) {
+                      _addCard(newCard['title'], newCard['memo'], newCard['answers']);
+                    }
+                  },
                   icon: const Icon(Icons.add),
                   label: const Text("Add Card"),
                 ),
@@ -176,7 +123,26 @@ class _CardSetState extends State<CardSet> {
                                 alignment: Alignment.centerRight,
                                 child: IconButton(
                                   icon: const Icon(Icons.edit),
-                                  onPressed: () => _showCardDialog(index: index),
+                                  onPressed: () async {
+                                    final updatedCard = await Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => AddEditCard(
+                                          index: index, // Editing a specific card
+                                          cardData: cards[index],
+                                        ),
+                                      ),
+                                    );
+
+                                    if (updatedCard != null) {
+                                      _editCard(
+                                        index,
+                                        updatedCard['title'],
+                                        updatedCard['memo'],
+                                        updatedCard['answers'],
+                                      );
+                                    }
+                                  },
                                 ),
                               ),
                             ],

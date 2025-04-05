@@ -4,6 +4,7 @@ import 'pages/folders.dart';
 import 'pages/card_set.dart';
 import 'pages/quiz.dart';
 import 'pages/setting.dart';
+import 'pages/add_edit_card.dart';
 import 'theme/theme_provider.dart';
 
 
@@ -30,6 +31,7 @@ class MyApp extends StatelessWidget {
               '/cardset': (context) => CardSet(),
               '/quiz': (context) => Quiz(),
               '/setting': (context) => Setting(),
+              '/add_card': (context) => AddEditCard(),
             },
           );
         },
