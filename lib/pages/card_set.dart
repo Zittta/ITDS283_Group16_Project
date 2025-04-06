@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'add_edit_card.dart';
 
-
 class CardSet extends StatefulWidget {
   const CardSet({super.key});
 
@@ -12,21 +11,25 @@ class CardSet extends StatefulWidget {
 class _CardSetState extends State<CardSet> {
   final List<Map<String, dynamic>> cards = [];
 
-  void _addCard(String title, String memo, List<String> answers) {
+  void _addCard(String title, String memo, String meaning, List<String> answers) {
     setState(() {
       cards.add({
         'title': title,
         'memo': memo,
+        'meaning': meaning, // Add the meaning to the card
+        'photo': 'https://via.placeholder.com/150/0000FF/808080', // Fake blue image URL
         'answers': answers,
       });
     });
   }
 
-  void _editCard(int index, String title, String memo, List<String> answers) {
+  void _editCard(int index, String title, String memo, String meaning, List<String> answers) {
     setState(() {
       cards[index] = {
         'title': title,
         'memo': memo,
+        'meaning': meaning, // Edit the meaning
+        'photo': 'https://via.placeholder.com/150/0000FF/808080', // Fake blue image URL
         'answers': answers,
       };
     });
@@ -65,7 +68,7 @@ class _CardSetState extends State<CardSet> {
                     );
 
                     if (newCard != null) {
-                      _addCard(newCard['title'], newCard['memo'], newCard['answers']);
+                      _addCard(newCard['title'], newCard['memo'], newCard['meaning'], newCard['answers']);
                     }
                   },
                   icon: const Icon(Icons.add),
@@ -111,6 +114,19 @@ class _CardSetState extends State<CardSet> {
                           ),
                           child: Column(
                             children: [
+                              // Display photo (fake blue image)
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Image.network(
+                                  cards[index]['photo'],
+                                  height: 100,
+                                  width: double.infinity,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              
+                              // Display title
                               Text(
                                 cards[index]['title'],
                                 textAlign: TextAlign.center,
@@ -118,7 +134,18 @@ class _CardSetState extends State<CardSet> {
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
+                              const SizedBox(height: 6),
+                              
+                              // Display meaning
+                              if (cards[index]['meaning'] != null)
+                                Text(
+                                  "Meaning: ${cards[index]['meaning']}",
+                                  style: theme.textTheme.bodyMedium,
+                                ),
+                              
                               const SizedBox(height: 10),
+                              
+                              // Edit button
                               Align(
                                 alignment: Alignment.centerRight,
                                 child: IconButton(
@@ -139,6 +166,7 @@ class _CardSetState extends State<CardSet> {
                                         index,
                                         updatedCard['title'],
                                         updatedCard['memo'],
+                                        updatedCard['meaning'],
                                         updatedCard['answers'],
                                       );
                                     }

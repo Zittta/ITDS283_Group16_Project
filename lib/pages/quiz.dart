@@ -94,8 +94,9 @@ class _QuizState extends State<Quiz> {
                 // Start Button
                 ElevatedButton(
                   onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("make alert and quizzing UI")),
+                    Navigator.pushNamed(
+                      context,
+                      '/quizzing',
                     );
                   },
                   child: Text("Start Quiz"),
