@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'card_set.dart'; // Adjust the path if it's in a subfolder
-
+import '../database/database_helper.dart'; // Adjust path as needed
 
 class Folders extends StatefulWidget {
   const Folders({super.key});
@@ -11,14 +11,26 @@ class Folders extends StatefulWidget {
 
 class _FoldersState extends State<Folders> {
   final TextEditingController _controller = TextEditingController();
-  final List<String> folders = [];
+  List<Map<String, dynamic>> folders = [];
 
-  void _addFolder(String name) {
-    if (name.trim().isEmpty) return;
+  @override
+  void initState() {
+    super.initState();
+    _loadFolders();
+  }
+
+  Future<void> _loadFolders() async {
+    final data = await DatabaseHelper().getFolders();
     setState(() {
-      folders.add(name.trim());
-      _controller.clear();
+      folders = data;
     });
+  }
+
+  Future<void> _addFolder(String name) async {
+    if (name.trim().isEmpty) return;
+    await DatabaseHelper().insertFolder(name.trim());
+    _controller.clear();
+    _loadFolders();
   }
 
   void _showCreateFolderDialog() {
@@ -42,10 +54,7 @@ class _FoldersState extends State<Folders> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  "Creating Options",
-                  style: theme.textTheme.titleMedium,
-                ),
+                Text("Creating Options", style: theme.textTheme.titleMedium),
                 IconButton(
                   icon: Icon(Icons.close, color: theme.iconTheme.color),
                   onPressed: () => Navigator.of(context).pop(),
@@ -80,7 +89,7 @@ class _FoldersState extends State<Folders> {
   }
 
   void _showChangeFolderNameDialog(int index) {
-    _controller.text = folders[index];
+    _controller.text = folders[index]['name'];
     showDialog(
       context: context,
       builder: (context) => _buildChangeFolderNameDialog(index),
@@ -122,13 +131,15 @@ class _FoldersState extends State<Folders> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
                   if (_controller.text.trim().isEmpty) return;
-                  setState(() {
-                    folders[index] = _controller.text.trim();
-                    _controller.clear();
-                  });
+                  await DatabaseHelper().updateFolder(
+                    folders[index]['id'],
+                    _controller.text.trim(),
+                  );
+                  _controller.clear();
                   Navigator.of(context).pop();
+                  _loadFolders();
                 },
                 child: const Text("Change"),
               ),
@@ -146,7 +157,8 @@ class _FoldersState extends State<Folders> {
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: theme.appBarTheme.backgroundColor ?? theme.colorScheme.surface,
+        backgroundColor:
+            theme.appBarTheme.backgroundColor ?? theme.colorScheme.surface,
         elevation: 0,
         title: Text(
           'Flash Cards',
@@ -173,7 +185,8 @@ class _FoldersState extends State<Folders> {
                 const SizedBox(width: 8),
                 Text(
                   'Folders',
-                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                  style: theme.textTheme.titleMedium
+                      ?.copyWith(fontWeight: FontWeight.bold),
                 ),
               ],
             ),
@@ -229,15 +242,15 @@ class _FoldersState extends State<Folders> {
       child: ListView.builder(
         itemCount: folders.length,
         itemBuilder: (context, index) {
+          final folder = folders[index];
           return ListTile(
             leading: Icon(Icons.folder, color: theme.iconTheme.color),
-            title: Text(folders[index], style: theme.textTheme.bodyLarge),
+            title: Text(folder['name'], style: theme.textTheme.bodyLarge),
             onTap: () {
-              // Navigate to CardSet on folder icon/title tap
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const CardSet(),
+                  builder: (context) => const CardSet(), // Can pass folder ID if needed
                 ),
               );
             },
@@ -247,7 +260,6 @@ class _FoldersState extends State<Folders> {
                 IconButton(
                   icon: Icon(Icons.quiz, color: theme.iconTheme.color),
                   onPressed: () {
-                    // Navigate to the '/quiz' page when the quiz icon is pressed
                     Navigator.pushNamed(context, '/quiz');
                   },
                 ),
