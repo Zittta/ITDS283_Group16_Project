@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'card_set.dart'; // Adjust the path if it's in a subfolder
-
+import '../database/database_helper.dart'; // Adjust path as needed
 
 class Folders extends StatefulWidget {
   const Folders({super.key});
@@ -11,14 +11,26 @@ class Folders extends StatefulWidget {
 
 class _FoldersState extends State<Folders> {
   final TextEditingController _controller = TextEditingController();
-  final List<String> folders = [];
+  List<Map<String, dynamic>> folders = [];
 
-  void _addFolder(String name) {
-    if (name.trim().isEmpty) return;
+  @override
+  void initState() {
+    super.initState();
+    _loadFolders();
+  }
+
+  Future<void> _loadFolders() async {
+    final data = await DatabaseHelper().getFolders();
     setState(() {
-      folders.add(name.trim());
-      _controller.clear();
+      folders = data;
     });
+  }
+
+  Future<void> _addFolder(String name) async {
+    if (name.trim().isEmpty) return;
+    await DatabaseHelper().insertFolder(name.trim());
+    _controller.clear();
+    _loadFolders();
   }
 
   void _showCreateFolderDialog() {
@@ -42,10 +54,7 @@ class _FoldersState extends State<Folders> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  "Creating Options",
-                  style: theme.textTheme.titleMedium,
-                ),
+                Text("Creating Options", style: theme.textTheme.titleMedium),
                 IconButton(
                   icon: Icon(Icons.close, color: theme.iconTheme.color),
                   onPressed: () => Navigator.of(context).pop(),
@@ -80,7 +89,7 @@ class _FoldersState extends State<Folders> {
   }
 
   void _showChangeFolderNameDialog(int index) {
-    _controller.text = folders[index];
+    _controller.text = folders[index]['name'];
     showDialog(
       context: context,
       builder: (context) => _buildChangeFolderNameDialog(index),
@@ -88,56 +97,97 @@ class _FoldersState extends State<Folders> {
   }
 
   Widget _buildChangeFolderNameDialog(int index) {
-    final theme = Theme.of(context);
+  final theme = Theme.of(context);
 
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text("Change Folder Name", style: theme.textTheme.titleMedium),
-                IconButton(
-                  icon: Icon(Icons.close, color: theme.iconTheme.color),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Text("New folder name", style: theme.textTheme.bodyMedium),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _controller,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                hintText: 'Enter new folder name',
+  return Dialog(
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    child: Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text("Change Folder Name", style: theme.textTheme.titleMedium),
+              IconButton(
+                icon: Icon(Icons.close, color: theme.iconTheme.color),
+                onPressed: () => Navigator.of(context).pop(),
               ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text("New folder name", style: theme.textTheme.bodyMedium),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _controller,
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              hintText: 'Enter new folder name',
             ),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  if (_controller.text.trim().isEmpty) return;
-                  setState(() {
-                    folders[index] = _controller.text.trim();
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () async {
+                    if (_controller.text.trim().isEmpty) return;
+                    await DatabaseHelper().updateFolder(
+                      folders[index]['id'],
+                      _controller.text.trim(),
+                    );
                     _controller.clear();
-                  });
-                  Navigator.of(context).pop();
-                },
-                child: const Text("Change"),
+                    Navigator.of(context).pop();
+                    _loadFolders();
+                  },
+                  child: const Text("Change"),
+                ),
               ),
-            ),
-          ],
-        ),
+              const SizedBox(width: 12),
+              IconButton(
+                icon: Icon(Icons.delete, color: theme.colorScheme.error),
+                tooltip: "Delete Folder",
+                onPressed: () async {
+                  final shouldDelete = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text("Delete Folder"),
+                      content: const Text(
+                        "Are you sure you want to delete this folder? This will also delete all associated cards and scores.",
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(false),
+                          child: const Text("Cancel"),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(true),
+                          child: Text(
+                            "Delete",
+                            style: TextStyle(color: theme.colorScheme.error),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+
+                  if (shouldDelete == true) {
+                    await DatabaseHelper().deleteFolder(folders[index]['id']);
+                    Navigator.of(context).pop();
+                    _loadFolders();
+                  }
+                },
+              ),
+            ],
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -146,7 +196,8 @@ class _FoldersState extends State<Folders> {
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: theme.appBarTheme.backgroundColor ?? theme.colorScheme.surface,
+        backgroundColor:
+            theme.appBarTheme.backgroundColor ?? theme.colorScheme.surface,
         elevation: 0,
         title: Text(
           'Flash Cards',
@@ -173,7 +224,8 @@ class _FoldersState extends State<Folders> {
                 const SizedBox(width: 8),
                 Text(
                   'Folders',
-                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                  style: theme.textTheme.titleMedium
+                      ?.copyWith(fontWeight: FontWeight.bold),
                 ),
               ],
             ),
@@ -229,15 +281,15 @@ class _FoldersState extends State<Folders> {
       child: ListView.builder(
         itemCount: folders.length,
         itemBuilder: (context, index) {
+          final folder = folders[index];
           return ListTile(
             leading: Icon(Icons.folder, color: theme.iconTheme.color),
-            title: Text(folders[index], style: theme.textTheme.bodyLarge),
+            title: Text(folder['name'], style: theme.textTheme.bodyLarge),
             onTap: () {
-              // Navigate to CardSet on folder icon/title tap
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const CardSet(),
+                  builder: (context) => const CardSet(), // Can pass folder ID if needed
                 ),
               );
             },
@@ -247,7 +299,6 @@ class _FoldersState extends State<Folders> {
                 IconButton(
                   icon: Icon(Icons.quiz, color: theme.iconTheme.color),
                   onPressed: () {
-                    // Navigate to the '/quiz' page when the quiz icon is pressed
                     Navigator.pushNamed(context, '/quiz');
                   },
                 ),
