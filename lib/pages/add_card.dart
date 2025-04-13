@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import '../database/database_helper.dart'; // Adjust path as needed
 
 class AddCard extends StatefulWidget {
-  const AddCard({super.key});
+  final int folderId;
+
+  const AddCard({super.key, required this.folderId});
 
   @override
   State<AddCard> createState() => _AddCardState();
@@ -25,22 +28,31 @@ class _AddCardState extends State<AddCard> {
     super.dispose();
   }
 
-  void _saveCard() {
+  Future<void> _saveCard() async {
     final title = _titleController.text.trim();
     final memo = _memoController.text.trim();
     final meaning = _meaningController.text.trim();
     final answers = _answerControllers.map((c) => c.text.trim()).toList();
 
-    if (title.isEmpty || meaning.isEmpty || answers.any((a) => a.isEmpty)) return;
+    if (title.isEmpty || meaning.isEmpty || answers.any((a) => a.isEmpty)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please complete all required fields')),
+      );
+      return;
+    }
 
-    final cardData = {
-      'title': title,
-      'memo': memo,
-      'meaning': meaning,
-      'answers': answers,
-    };
+    final answerString = answers.join('|'); // Store answers as delimited string
 
-    Navigator.pop(context, cardData);
+      await DatabaseHelper().insertCard(
+    widget.folderId,
+    title,
+    answerString,
+    meaning,
+    memo,
+    photo: null,
+  );
+
+    Navigator.pop(context, true); // Return to previous screen
   }
 
   @override

@@ -1,42 +1,31 @@
 import 'package:flutter/material.dart';
+import '../database/database_helper.dart';
 import '/pages/add_card.dart';
 import '/pages/edit_card.dart';
 
 class CardSet extends StatefulWidget {
-  final String folderName;  
-  final int folderId;      
+  final String folderName;
+  final int folderId;
 
-  const CardSet({super.key, required this.folderName, required this.folderId});  // Accept folderName and folderId
+  const CardSet({super.key, required this.folderName, required this.folderId});
 
   @override
   State<CardSet> createState() => _CardSetState();
 }
 
 class _CardSetState extends State<CardSet> {
-  final List<Map<String, dynamic>> cards = [];
-    // Method to add a new card
-  void _addCard(String title, String memo, String meaning, List<String> answers) {
-    setState(() {
-      cards.add({
-        'title': title,
-        'memo': memo,
-        'meaning': meaning,
-        'photo': 'placeholder', // Temporary placeholder for photo
-        'answers': answers,
-      });
-    });
+  List<Map<String, dynamic>> cards = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCards();
   }
 
-  // Method to edit an existing card
-  void _editCard(int index, String title, String memo, String meaning, List<String> answers) {
+  Future<void> _loadCards() async {
+    final loadedCards = await DatabaseHelper().getCards(widget.folderId);
     setState(() {
-      cards[index] = {
-        'title': title,
-        'memo': memo,
-        'meaning': meaning,
-        'photo': 'placeholder', // Temporary placeholder for photo
-        'answers': answers,
-      };
+      cards = loadedCards;
     });
   }
 
@@ -48,13 +37,12 @@ class _CardSetState extends State<CardSet> {
       appBar: AppBar(
         backgroundColor: theme.colorScheme.surface,
         elevation: 0,
-        title: Text(widget.folderName),  // Display the folder name in AppBar
+        title: Text(widget.folderName),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            // Top buttons
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -65,15 +53,16 @@ class _CardSetState extends State<CardSet> {
                 ),
                 ElevatedButton.icon(
                   onPressed: () async {
-                    final newCard = await Navigator.push(
+                    final result = await Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const AddCard(),
+                        builder: (context) =>
+                            AddCard(folderId: widget.folderId),
                       ),
                     );
 
-                    if (newCard != null) {
-                      _addCard(newCard['title'], newCard['memo'], newCard['meaning'], newCard['answers']);
+                    if (result == true) {
+                      _loadCards(); // refresh list
                     }
                   },
                   icon: const Icon(Icons.add),
@@ -102,6 +91,9 @@ class _CardSetState extends State<CardSet> {
                   : ListView.builder(
                       itemCount: cards.length,
                       itemBuilder: (context, index) {
+                        final card = cards[index];
+                        final answers = card['answer']?.split('|') ?? [];
+
                         return Container(
                           margin: const EdgeInsets.symmetric(vertical: 10),
                           padding: const EdgeInsets.all(20),
@@ -118,8 +110,8 @@ class _CardSetState extends State<CardSet> {
                             ],
                           ),
                           child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // Placeholder image
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(12),
                                 child: Container(
@@ -132,49 +124,46 @@ class _CardSetState extends State<CardSet> {
                                 ),
                               ),
                               const SizedBox(height: 10),
-
-                              // Display title
                               Text(
-                                cards[index]['title'],
-                                textAlign: TextAlign.center,
+                                card['question'] ?? '',
                                 style: theme.textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                               const SizedBox(height: 6),
-
-                              if (cards[index]['meaning'] != null)
+                              if (card['meaning'] != null &&
+                                  card['meaning'].toString().isNotEmpty)
                                 Text(
-                                  "Meaning: ${cards[index]['meaning']}",
+                                  "Meaning: ${card['meaning']}",
                                   style: theme.textTheme.bodyMedium,
                                 ),
-
-                              const SizedBox(height: 10),
-
-                              // Edit button
+                              const SizedBox(height: 6),
+                              if (answers.isNotEmpty)
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text("Answers:"),
+                                    for (final ans in answers)
+                                      Text("- $ans",
+                                          style: theme.textTheme.bodySmall),
+                                  ],
+                                ),
                               Align(
                                 alignment: Alignment.centerRight,
                                 child: IconButton(
                                   icon: const Icon(Icons.edit),
                                   onPressed: () async {
-                                    final updatedCard = await Navigator.push(
+                                    final result = await Navigator.push(
                                       context,
                                       MaterialPageRoute(
                                         builder: (context) => EditCard(
-                                          index: index,
-                                          cardData: cards[index],
+                                          cardId: card['id'],
+                                          cardData: card,
                                         ),
                                       ),
                                     );
-
-                                    if (updatedCard != null) {
-                                      _editCard(
-                                        index,
-                                        updatedCard['title'],
-                                        updatedCard['memo'],
-                                        updatedCard['meaning'],
-                                        updatedCard['answers'],
-                                      );
+                                    if (result == true) {
+                                      _loadCards(); // Refresh list after editing
                                     }
                                   },
                                 ),

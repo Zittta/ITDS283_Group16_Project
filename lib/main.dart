@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'pages/folders.dart';
-import 'pages/card_set.dart';
 import 'pages/quiz.dart';
 import 'pages/quizzing.dart';
 import 'pages/setting.dart';
@@ -32,7 +31,6 @@ class MyApp extends StatelessWidget {
             routes: {
               '/quiz': (context) => Quiz(),
               '/setting': (context) => Setting(),
-              '/add_card': (context) => AddCard(),
               '/quizzing': (context) => QuizzingPage(),
               '/results': (context) => ResultsPage(),
             },

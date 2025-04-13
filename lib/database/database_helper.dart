@@ -19,7 +19,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 2,  // Increment the version number for migration
+      version: 3,  // Increment the version number for migration
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,  // Handle upgrading the database schema
       onOpen: (db) async {
@@ -42,7 +42,9 @@ class DatabaseHelper {
         folder_id INTEGER,
         question TEXT,
         answer TEXT,
-        photo TEXT NULL,  // Add the 'photo' column
+        meaning TEXT,
+        memo TEXT,
+        photo TEXT,
         FOREIGN KEY (folder_id) REFERENCES folders (id) ON DELETE CASCADE
       )
     ''');
@@ -98,12 +100,14 @@ class DatabaseHelper {
   }
 
   // ─── Card CRUD ───────────────────────────────────────────────────────────────
-  Future<int> insertCard(int folderId, String question, String answer, {String? photo}) async {
+  Future<int> insertCard(int folderId, String question, String answer,String meaning,String memo, {String? photo}) async {
     final db = await database;
     return await db.insert('cards', {
       'folder_id': folderId,
       'question': question,
       'answer': answer,
+      'meaning': meaning,
+      'memo': memo,
       'photo': photo ?? null,  // Allow photo to be null
     });
   }
@@ -113,13 +117,15 @@ class DatabaseHelper {
     return await db.query('cards', where: 'folder_id = ?', whereArgs: [folderId]);
   }
 
-  Future<int> updateCard(int id, String question, String answer, {String? photo}) async {
+  Future<int> updateCard(int id, String question, String answer,String meaning,String memo, {String? photo}) async {
     final db = await database;
     return await db.update(
       'cards',
       {
         'question': question,
         'answer': answer,
+        'meaning': meaning,
+        'memo': memo,
         'photo': photo ?? null,  // Allow photo to be null
       },
       where: 'id = ?',

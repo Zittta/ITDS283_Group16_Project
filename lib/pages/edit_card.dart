@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import '../database/database_helper.dart'; // Adjust path as needed
 
 class EditCard extends StatefulWidget {
-  final int index;
+  final int cardId;
   final Map<String, dynamic> cardData;
 
-  const EditCard({super.key, required this.index, required this.cardData});
+  const EditCard({super.key, required this.cardId, required this.cardData});
 
   @override
   State<EditCard> createState() => _EditCardState();
@@ -19,13 +20,11 @@ class _EditCardState extends State<EditCard> {
   @override
   void initState() {
     super.initState();
-    _titleController = TextEditingController(text: widget.cardData['title']);
+    _titleController = TextEditingController(text: widget.cardData['question']);
     _memoController = TextEditingController(text: widget.cardData['memo']);
     _meaningController = TextEditingController(text: widget.cardData['meaning']);
-    _answerControllers = List.generate(
-      4,
-      (i) => TextEditingController(text: widget.cardData['answers'][i]),
-    );
+    final answers = (widget.cardData['answer'] as String?)?.split('|') ?? List.filled(4, '');
+    _answerControllers = List.generate(4, (i) => TextEditingController(text: i < answers.length ? answers[i] : ''));
   }
 
   @override
@@ -33,13 +32,13 @@ class _EditCardState extends State<EditCard> {
     _titleController.dispose();
     _memoController.dispose();
     _meaningController.dispose();
-    for (var controller in _answerControllers) {
-      controller.dispose();
+    for (var c in _answerControllers) {
+      c.dispose();
     }
     super.dispose();
   }
 
-  void _saveCard() {
+  void _saveCard() async {
     final title = _titleController.text.trim();
     final memo = _memoController.text.trim();
     final meaning = _meaningController.text.trim();
@@ -47,25 +46,29 @@ class _EditCardState extends State<EditCard> {
 
     if (title.isEmpty || meaning.isEmpty || answers.any((a) => a.isEmpty)) return;
 
-    final cardData = {
-      'title': title,
-      'memo': memo,
-      'meaning': meaning,
-      'answers': answers,
-    };
+    final joinedAnswers = answers.join('|');
 
-    Navigator.pop(context, cardData);
+    await DatabaseHelper().updateCard(
+      widget.cardId,
+      title,
+      joinedAnswers,
+      meaning,
+      memo,
+      photo: null, // Add photo later
+    );
+
+    Navigator.pop(context, true); // Return true to trigger refresh
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Edit Card')),
-      body: _buildForm(context),
+      body: _buildForm(),
     );
   }
 
-  Widget _buildForm(BuildContext context) {
+  Widget _buildForm() {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: ListView(
@@ -90,7 +93,7 @@ class _EditCardState extends State<EditCard> {
             icon: const Icon(Icons.camera_alt),
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Photo selection will be done later.')),
+                const SnackBar(content: Text('Photo selection will be added later.')),
               );
             },
           ),
