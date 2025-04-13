@@ -5,7 +5,7 @@ import 'pages/card_set.dart';
 import 'pages/quiz.dart';
 import 'pages/quizzing.dart';
 import 'pages/setting.dart';
-import 'pages/add_edit_card.dart';
+import 'pages/add_card.dart';
 import 'pages/result.dart';
 import 'theme/theme_provider.dart';
 
@@ -30,10 +30,9 @@ class MyApp extends StatelessWidget {
             darkTheme: ThemeData.dark(),
             home: Folders(),
             routes: {
-              '/cardset': (context) => CardSet(),
               '/quiz': (context) => Quiz(),
               '/setting': (context) => Setting(),
-              '/add_card': (context) => AddEditCard(),
+              '/add_card': (context) => AddCard(),
               '/quizzing': (context) => QuizzingPage(),
               '/results': (context) => ResultsPage(),
             },

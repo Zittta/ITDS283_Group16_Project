@@ -97,97 +97,96 @@ class _FoldersState extends State<Folders> {
   }
 
   Widget _buildChangeFolderNameDialog(int index) {
-  final theme = Theme.of(context);
+    final theme = Theme.of(context);
 
-  return Dialog(
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-    child: Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text("Change Folder Name", style: theme.textTheme.titleMedium),
-              IconButton(
-                icon: Icon(Icons.close, color: theme.iconTheme.color),
-                onPressed: () => Navigator.of(context).pop(),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Text("New folder name", style: theme.textTheme.bodyMedium),
-          const SizedBox(height: 8),
-          TextField(
-            controller: _controller,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              hintText: 'Enter new folder name',
-            ),
-          ),
-          const SizedBox(height: 20),
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () async {
-                    if (_controller.text.trim().isEmpty) return;
-                    await DatabaseHelper().updateFolder(
-                      folders[index]['id'],
-                      _controller.text.trim(),
-                    );
-                    _controller.clear();
-                    Navigator.of(context).pop();
-                    _loadFolders();
-                  },
-                  child: const Text("Change"),
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text("Change Folder Name", style: theme.textTheme.titleMedium),
+                IconButton(
+                  icon: Icon(Icons.close, color: theme.iconTheme.color),
+                  onPressed: () => Navigator.of(context).pop(),
                 ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text("New folder name", style: theme.textTheme.bodyMedium),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _controller,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                hintText: 'Enter new folder name',
               ),
-              const SizedBox(width: 12),
-              IconButton(
-                icon: Icon(Icons.delete, color: theme.colorScheme.error),
-                tooltip: "Delete Folder",
-                onPressed: () async {
-                  final shouldDelete = await showDialog<bool>(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text("Delete Folder"),
-                      content: const Text(
-                        "Are you sure you want to delete this folder? This will also delete all associated cards and scores.",
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(false),
-                          child: const Text("Cancel"),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      if (_controller.text.trim().isEmpty) return;
+                      await DatabaseHelper().updateFolder(
+                        folders[index]['id'],
+                        _controller.text.trim(),
+                      );
+                      _controller.clear();
+                      Navigator.of(context).pop();
+                      _loadFolders();
+                    },
+                    child: const Text("Change"),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                IconButton(
+                  icon: Icon(Icons.delete, color: theme.colorScheme.error),
+                  tooltip: "Delete Folder",
+                  onPressed: () async {
+                    final shouldDelete = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text("Delete Folder"),
+                        content: const Text(
+                          "Are you sure you want to delete this folder? This will also delete all associated cards and scores.",
                         ),
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(true),
-                          child: Text(
-                            "Delete",
-                            style: TextStyle(color: theme.colorScheme.error),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(false),
+                            child: const Text("Cancel"),
                           ),
-                        ),
-                      ],
-                    ),
-                  );
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(true),
+                            child: Text(
+                              "Delete",
+                              style: TextStyle(color: theme.colorScheme.error),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
 
-                  if (shouldDelete == true) {
-                    await DatabaseHelper().deleteFolder(folders[index]['id']);
-                    Navigator.of(context).pop();
-                    _loadFolders();
-                  }
-                },
-              ),
-            ],
-          ),
-        ],
+                    if (shouldDelete == true) {
+                      await DatabaseHelper().deleteFolder(folders[index]['id']);
+                      Navigator.of(context).pop();
+                      _loadFolders();
+                    }
+                  },
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
-    ),
-  );
-}
-
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -289,7 +288,10 @@ class _FoldersState extends State<Folders> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const CardSet(), // Can pass folder ID if needed
+                  builder: (context) => CardSet(
+                    folderId: folder['id'], // Pass folder ID
+                    folderName: folder['name'], // Pass folder name
+                  ),
                 ),
               );
             },

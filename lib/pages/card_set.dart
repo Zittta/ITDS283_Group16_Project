@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
-import 'add_edit_card.dart';
+import '/pages/add_card.dart';
+import '/pages/edit_card.dart';
 
 class CardSet extends StatefulWidget {
-  const CardSet({super.key});
+  final String folderName;  
+  final int folderId;      
+
+  const CardSet({super.key, required this.folderName, required this.folderId});  // Accept folderName and folderId
 
   @override
   State<CardSet> createState() => _CardSetState();
@@ -10,26 +14,27 @@ class CardSet extends StatefulWidget {
 
 class _CardSetState extends State<CardSet> {
   final List<Map<String, dynamic>> cards = [];
-
+    // Method to add a new card
   void _addCard(String title, String memo, String meaning, List<String> answers) {
     setState(() {
       cards.add({
         'title': title,
         'memo': memo,
         'meaning': meaning,
-        'photo': 'placeholder', // Updated: still keeps a value for logic, not used for image now
+        'photo': 'placeholder', // Temporary placeholder for photo
         'answers': answers,
       });
     });
   }
 
+  // Method to edit an existing card
   void _editCard(int index, String title, String memo, String meaning, List<String> answers) {
     setState(() {
       cards[index] = {
         'title': title,
         'memo': memo,
         'meaning': meaning,
-        'photo': 'placeholder',
+        'photo': 'placeholder', // Temporary placeholder for photo
         'answers': answers,
       };
     });
@@ -43,7 +48,7 @@ class _CardSetState extends State<CardSet> {
       appBar: AppBar(
         backgroundColor: theme.colorScheme.surface,
         elevation: 0,
-        title: const Text('New Folder - 1'),
+        title: Text(widget.folderName),  // Display the folder name in AppBar
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -63,7 +68,7 @@ class _CardSetState extends State<CardSet> {
                     final newCard = await Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => AddEditCard(index: null),
+                        builder: (context) => const AddCard(),
                       ),
                     );
 
@@ -114,7 +119,7 @@ class _CardSetState extends State<CardSet> {
                           ),
                           child: Column(
                             children: [
-                              // ✅ Updated to FlutterLogo instead of network image
+                              // Placeholder image
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(12),
                                 child: Container(
@@ -128,6 +133,7 @@ class _CardSetState extends State<CardSet> {
                               ),
                               const SizedBox(height: 10),
 
+                              // Display title
                               Text(
                                 cards[index]['title'],
                                 textAlign: TextAlign.center,
@@ -145,6 +151,7 @@ class _CardSetState extends State<CardSet> {
 
                               const SizedBox(height: 10),
 
+                              // Edit button
                               Align(
                                 alignment: Alignment.centerRight,
                                 child: IconButton(
@@ -153,7 +160,7 @@ class _CardSetState extends State<CardSet> {
                                     final updatedCard = await Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => AddEditCard(
+                                        builder: (context) => EditCard(
                                           index: index,
                                           cardData: cards[index],
                                         ),
