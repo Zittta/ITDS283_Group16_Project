@@ -148,25 +148,39 @@ class _CardSetState extends State<CardSet> {
                                           style: theme.textTheme.bodySmall),
                                   ],
                                 ),
-                              Align(
-                                alignment: Alignment.centerRight,
-                                child: IconButton(
-                                  icon: const Icon(Icons.edit),
-                                  onPressed: () async {
-                                    final result = await Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => EditCard(
-                                          cardId: card['id'],
-                                          cardData: card,
+                              const SizedBox(height: 12),
+                              
+                              // The row for delete and edit icons at the bottom of each card
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.delete,
+                                        color: Colors.red),
+                                    onPressed: () async {
+                                      await DatabaseHelper()
+                                          .deleteCard(card['id']);
+                                      _loadCards(); // Refresh after delete
+                                    },
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.edit),
+                                    onPressed: () async {
+                                      final result = await Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => EditCard(
+                                            cardId: card['id'],
+                                            cardData: card,
+                                          ),
                                         ),
-                                      ),
-                                    );
-                                    if (result == true) {
-                                      _loadCards(); // Refresh list after editing
-                                    }
-                                  },
-                                ),
+                                      );
+                                      if (result == true) {
+                                        _loadCards(); // Refresh list after editing
+                                      }
+                                    },
+                                  ),
+                                ],
                               ),
                             ],
                           ),
