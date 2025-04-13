@@ -16,8 +16,8 @@ class _CardSetState extends State<CardSet> {
       cards.add({
         'title': title,
         'memo': memo,
-        'meaning': meaning, // Add the meaning to the card
-        'photo': 'https://via.placeholder.com/150/0000FF/808080', // Fake blue image URL
+        'meaning': meaning,
+        'photo': 'placeholder', // Updated: still keeps a value for logic, not used for image now
         'answers': answers,
       });
     });
@@ -28,8 +28,8 @@ class _CardSetState extends State<CardSet> {
       cards[index] = {
         'title': title,
         'memo': memo,
-        'meaning': meaning, // Edit the meaning
-        'photo': 'https://via.placeholder.com/150/0000FF/808080', // Fake blue image URL
+        'meaning': meaning,
+        'photo': 'placeholder',
         'answers': answers,
       };
     });
@@ -63,7 +63,7 @@ class _CardSetState extends State<CardSet> {
                     final newCard = await Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => AddEditCard(index: null), // Add card without editing
+                        builder: (context) => AddEditCard(index: null),
                       ),
                     );
 
@@ -114,19 +114,20 @@ class _CardSetState extends State<CardSet> {
                           ),
                           child: Column(
                             children: [
-                              // Display photo (fake blue image)
+                              // ✅ Updated to FlutterLogo instead of network image
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(12),
-                                child: Image.network(
-                                  cards[index]['photo'],
+                                child: Container(
                                   height: 100,
                                   width: double.infinity,
-                                  fit: BoxFit.cover,
+                                  color: Colors.blue[50],
+                                  child: const Center(
+                                    child: FlutterLogo(size: 60),
+                                  ),
                                 ),
                               ),
                               const SizedBox(height: 10),
-                              
-                              // Display title
+
                               Text(
                                 cards[index]['title'],
                                 textAlign: TextAlign.center,
@@ -135,17 +136,15 @@ class _CardSetState extends State<CardSet> {
                                 ),
                               ),
                               const SizedBox(height: 6),
-                              
-                              // Display meaning
+
                               if (cards[index]['meaning'] != null)
                                 Text(
                                   "Meaning: ${cards[index]['meaning']}",
                                   style: theme.textTheme.bodyMedium,
                                 ),
-                              
+
                               const SizedBox(height: 10),
-                              
-                              // Edit button
+
                               Align(
                                 alignment: Alignment.centerRight,
                                 child: IconButton(
@@ -155,7 +154,7 @@ class _CardSetState extends State<CardSet> {
                                       context,
                                       MaterialPageRoute(
                                         builder: (context) => AddEditCard(
-                                          index: index, // Editing a specific card
+                                          index: index,
                                           cardData: cards[index],
                                         ),
                                       ),
