@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'card_set.dart'; // Adjust the path if it's in a subfolder
+import 'card_set.dart';
+import 'quiz.dart';
 import '../database/database_helper.dart'; // Adjust path as needed
 
 class Folders extends StatefulWidget {
@@ -301,7 +302,15 @@ class _FoldersState extends State<Folders> {
                 IconButton(
                   icon: Icon(Icons.quiz, color: theme.iconTheme.color),
                   onPressed: () {
-                    Navigator.pushNamed(context, '/quiz');
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => Quiz(
+                          folderId: folder['id'],
+                          folderName: folder['name'],
+                        ),
+                      ),
+                    );
                   },
                 ),
                 IconButton(

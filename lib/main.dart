@@ -29,10 +29,7 @@ class MyApp extends StatelessWidget {
             darkTheme: ThemeData.dark(),
             home: Folders(),
             routes: {
-              '/quiz': (context) => Quiz(),
               '/setting': (context) => Setting(),
-              '/quizzing': (context) => QuizzingPage(),
-              '/results': (context) => ResultsPage(),
             },
           );
         },

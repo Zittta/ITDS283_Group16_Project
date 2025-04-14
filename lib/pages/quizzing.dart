@@ -1,78 +1,120 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
+import 'result.dart';
+import '../database/database_helper.dart';
 
 class QuizzingPage extends StatefulWidget {
+  final int folderId;
+
+  const QuizzingPage({super.key, required this.folderId});
+
   @override
-  _QuizzingPageState createState() => _QuizzingPageState();
+  State<QuizzingPage> createState() => _QuizzingPageState();
 }
 
 class _QuizzingPageState extends State<QuizzingPage> {
+  List<Map<String, dynamic>> cards = [];
+  List<Map<String, dynamic>> questions = [];
+
   int currentQuestionIndex = 0;
   int correctAnswers = 0;
   List<int> userSelections = [];
 
-  final List<Map<String, dynamic>> questions = [
-    {
-      'question': 'What is Flutter?',
-      'options': ['A bird', 'A UI toolkit', 'A database', 'A game engine'],
-      'answerIndex': 1,
-    },
-    {
-      'question': 'What language is used in Flutter?',
-      'options': ['Python', 'Java', 'Dart', 'Kotlin'],
-      'answerIndex': 2,
-    },
-    {
-      'question': 'Which widget is immutable?',
-      'options': ['StatelessWidget', 'StatefulWidget', 'TextField', 'Column'],
-      'answerIndex': 0,
-    },
-    {
-      'question': 'What is setState used for?',
-      'options': [
-        'Updating the state',
-        'Rendering images',
-        'Making API calls',
-        'Handling navigation'
-      ],
-      'answerIndex': 0,
-    },
-    {
-      'question': 'Which is a layout widget?',
-      'options': ['Column', 'Http', 'Route', 'SnackBar'],
-      'answerIndex': 0,
-    },
-  ];
+  bool isLoading = true;
 
-  void _handleAnswer(int selectedIndex) {
-    final isCorrect = selectedIndex == questions[currentQuestionIndex]['answerIndex'];
-
-    if (isCorrect) correctAnswers++;
-    userSelections.add(selectedIndex);
-
-    if (currentQuestionIndex < questions.length - 1) {
-      setState(() {
-        currentQuestionIndex++;
-      });
-    } else {
-      Navigator.pushReplacementNamed(
-        context,
-        '/results',
-        arguments: {
-          'total': questions.length,
-          'correct': correctAnswers,
-          'selections': userSelections,
-          'questions': questions,
-        },
-      );
-    }
+  @override
+  void initState() {
+    super.initState();
+    _loadCards();
   }
+
+  Future<void> _loadCards() async {
+    final allCards = await DatabaseHelper().getCards(widget.folderId);
+    if (allCards.length < 5) {
+      setState(() {
+        isLoading = false;
+      });
+      return;
+    }
+
+    // Shuffle and generate questions with 5 choices each
+    final random = Random();
+    for (var card in allCards) {
+      final correctMeaning = card['meaning'];
+      final questionText = card['question'];
+
+      // Get 4 incorrect meanings
+      final incorrectOptions = allCards
+          .where((c) => c['id'] != card['id'] && c['meaning'] != correctMeaning)
+          .map((c) => c['meaning'] as String)
+          .toList();
+
+      incorrectOptions.shuffle(random);
+      final choices = incorrectOptions.take(4).toList();
+      choices.add(correctMeaning);
+      choices.shuffle(random);
+
+      final answerIndex = choices.indexOf(correctMeaning);
+
+      questions.add({
+        'question': questionText,
+        'options': choices,
+        'answerIndex': answerIndex,
+      });
+    }
+
+    setState(() {
+      isLoading = false;
+    });
+  }
+
+  void _handleAnswer(int selectedIndex) async {
+  final isCorrect = selectedIndex == questions[currentQuestionIndex]['answerIndex'];
+  if (isCorrect) correctAnswers++;
+  userSelections.add(selectedIndex);
+
+  if (currentQuestionIndex < questions.length - 1) {
+    setState(() {
+      currentQuestionIndex++;
+    });
+  } else {
+    // Insert score before navigating
+    await DatabaseHelper().insertQuizScore(widget.folderId, correctAnswers);
+
+    // Navigate to results
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ResultsPage(
+          folderId: widget.folderId,
+          correct: correctAnswers,
+          total: questions.length,
+        ),
+      ),
+    );
+  }
+}
+
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (questions.isEmpty) {
+      return const Scaffold(
+        body: Center(child: Text('Not enough cards to generate quiz.')),
+      );
+    }
+
     final question = questions[currentQuestionIndex];
+    final options = question['options'] as List<String>;
 
     return Scaffold(
-      appBar: AppBar(title: Text("Quiz")),
+      appBar: AppBar(title: const Text("Quiz")),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
@@ -80,20 +122,20 @@ class _QuizzingPageState extends State<QuizzingPage> {
           children: [
             Text(
               'Question ${currentQuestionIndex + 1}/${questions.length}',
-              style: TextStyle(fontSize: 18),
+              style: const TextStyle(fontSize: 18),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Text(
               question['question'],
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 30),
-            ...List.generate(4, (index) {
+            const SizedBox(height: 30),
+            ...List.generate(options.length, (index) {
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8.0),
                 child: ElevatedButton(
                   onPressed: () => _handleAnswer(index),
-                  child: Text(question['options'][index]),
+                  child: Text(options[index]),
                 ),
               );
             }),

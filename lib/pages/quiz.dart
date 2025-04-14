@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
+import 'quizzing.dart';
 
 class Quiz extends StatefulWidget {
+  final int folderId;
+  final String folderName;
+
+  const Quiz({super.key, required this.folderName, required this.folderId});
+
   @override
   _QuizState createState() => _QuizState();
 }
@@ -11,11 +17,12 @@ class _QuizState extends State<Quiz> {
 
   @override
   Widget build(BuildContext context) {
-    String folderName = "Folder name"; // Replace dynamically if needed
+    String folderName = widget.folderName;
+    int folderId = widget.folderId;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text("Let's get Started!"),
+        title: const Text("Let's get Started!"),
       ),
       body: Center(
         child: Padding(
@@ -27,16 +34,15 @@ class _QuizState extends State<Quiz> {
                 // Folder name
                 Text(
                   folderName,
-                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      fontSize: 28, fontWeight: FontWeight.bold),
                 ),
-                SizedBox(height: 40), // Increased spacing
+                const SizedBox(height: 40),
 
                 // Select Question Type label
-                Text(
-                  "Select Question Type:",
-                  style: TextStyle(fontSize: 18),
-                ),
-                SizedBox(height: 20),
+                const Text("Select Question Type:",
+                    style: TextStyle(fontSize: 18)),
+                const SizedBox(height: 20),
 
                 // Radio buttons
                 Row(
@@ -51,8 +57,8 @@ class _QuizState extends State<Quiz> {
                         });
                       },
                     ),
-                    Text("Front Question"),
-                    SizedBox(width: 30),
+                    const Text("Front Question"),
+                    const SizedBox(width: 30),
                     Radio<String>(
                       value: "Back",
                       groupValue: selectedQuestionType,
@@ -62,17 +68,15 @@ class _QuizState extends State<Quiz> {
                         });
                       },
                     ),
-                    Text("Back Question"),
+                    const Text("Back Question"),
                   ],
                 ),
-                SizedBox(height: 40), // Increased spacing
+                const SizedBox(height: 40),
 
                 // Number of Questions label
-                Text(
-                  "Number of Questions:",
-                  style: TextStyle(fontSize: 18),
-                ),
-                SizedBox(height: 20),
+                const Text("Number of Questions:",
+                    style: TextStyle(fontSize: 18)),
+                const SizedBox(height: 20),
 
                 // Dropdown
                 DropdownButton<int>(
@@ -89,17 +93,20 @@ class _QuizState extends State<Quiz> {
                     );
                   }).toList(),
                 ),
-                SizedBox(height: 40), // Increased spacing
+                const SizedBox(height: 40),
 
                 // Start Button
                 ElevatedButton(
                   onPressed: () {
-                    Navigator.pushNamed(
+                    Navigator.push(
                       context,
-                      '/quizzing',
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            QuizzingPage(folderId: folderId),
+                      ),
                     );
                   },
-                  child: Text("Start Quiz"),
+                  child: const Text("Start Quiz"),
                 ),
               ],
             ),
