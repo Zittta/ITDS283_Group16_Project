@@ -29,14 +29,14 @@ class DatabaseHelper {
   }
 
   Future<void> _onCreate(Database db, int version) async {
-    await db.execute('''
+    await db.execute(''' 
       CREATE TABLE folders (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT
       )
     ''');
 
-    await db.execute('''
+    await db.execute(''' 
       CREATE TABLE cards (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         folder_id INTEGER,
@@ -48,7 +48,7 @@ class DatabaseHelper {
       )
     ''');
 
-    await db.execute('''
+    await db.execute(''' 
       CREATE TABLE quiz_scores (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         folder_id INTEGER,
@@ -63,17 +63,17 @@ class DatabaseHelper {
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
-      await db.execute('ALTER TABLE cards ADD COLUMN photo TEXT');
+      await _addColumnIfNotExists(db, 'cards', 'photo', 'TEXT');
     }
 
     if (oldVersion < 3) {
-      await db.execute('ALTER TABLE cards ADD COLUMN meaning TEXT');
+      await _addColumnIfNotExists(db, 'cards', 'meaning', 'TEXT');
     }
 
     if (oldVersion < 4) {
       await db.execute('ALTER TABLE cards RENAME TO cards_old');
 
-      await db.execute('''
+      await db.execute(''' 
         CREATE TABLE cards (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           folder_id INTEGER,
@@ -85,12 +85,22 @@ class DatabaseHelper {
         )
       ''');
 
-      await db.execute('''
+      await db.execute(''' 
         INSERT INTO cards (id, folder_id, question, meaning, memo, photo)
         SELECT id, folder_id, question, meaning, memo, photo FROM cards_old
       ''');
 
       await db.execute('DROP TABLE cards_old');
+    }
+  }
+
+  // Add the column if it doesn't already exist
+  Future<void> _addColumnIfNotExists(Database db, String table, String columnName, String columnType) async {
+    final result = await db.rawQuery('PRAGMA table_info($table)');
+    final columns = result.map((row) => row['name']).toList();
+
+    if (!columns.contains(columnName)) {
+      await db.execute('ALTER TABLE $table ADD COLUMN $columnName $columnType');
     }
   }
 

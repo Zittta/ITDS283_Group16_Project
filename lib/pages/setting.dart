@@ -68,7 +68,7 @@ class Setting extends StatelessWidget {
                   context: context,
                   applicationName: "Flashcard App",
                   applicationVersion: "1.0.0",
-                  applicationLegalese: "© 2025 YourName",
+                  applicationLegalese: "© 2025 Sitta 6687054 & Kittikhun 6687059",
                 );
               },
             ),
