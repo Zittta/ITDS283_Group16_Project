@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../database/database_helper.dart';
 import '/pages/add_card.dart';
 import '/pages/edit_card.dart';
+import 'dart:io'; // Import to use File class for images
 
 class CardSet extends StatefulWidget {
   final String folderName;
@@ -32,12 +33,20 @@ class _CardSetState extends State<CardSet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final shadowColor = theme.brightness == Brightness.dark
+        ? Colors.white.withOpacity(0.05) // Lighter shadow for dark theme
+        : Colors.black.withOpacity(0.05); // Standard shadow for light theme
 
     return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: theme.colorScheme.surface,
+        backgroundColor:
+            theme.appBarTheme.backgroundColor ?? theme.colorScheme.surface,
         elevation: 0,
-        title: Text(widget.folderName),
+        title: Text(
+          widget.folderName,
+          style: TextStyle(color: theme.textTheme.titleLarge?.color),
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -93,6 +102,7 @@ class _CardSetState extends State<CardSet> {
                       itemBuilder: (context, index) {
                         final card = cards[index];
                         final answers = card['answer']?.split('|') ?? [];
+                        final imagePath = card['photo']; // Get the photo path
 
                         return Container(
                           margin: const EdgeInsets.symmetric(vertical: 10),
@@ -102,7 +112,7 @@ class _CardSetState extends State<CardSet> {
                             borderRadius: BorderRadius.circular(16),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.15),
+                                color: shadowColor, // Apply dynamic shadow color
                                 blurRadius: 12,
                                 spreadRadius: 2,
                                 offset: const Offset(0, 6),
@@ -112,9 +122,19 @@ class _CardSetState extends State<CardSet> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: Container(
+                              // Show image if it exists
+                              if (imagePath != null && imagePath.isNotEmpty)
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.file(
+                                    File(imagePath), // Display the image from the path
+                                    height: 100,
+                                    width: double.infinity,
+                                    fit: BoxFit.cover,
+                                  ),
+                                )
+                              else
+                                Container(
                                   height: 100,
                                   width: double.infinity,
                                   color: Colors.blue[50],
@@ -122,7 +142,6 @@ class _CardSetState extends State<CardSet> {
                                     child: FlutterLogo(size: 60),
                                   ),
                                 ),
-                              ),
                               const SizedBox(height: 10),
                               Text(
                                 card['question'] ?? '',
@@ -149,7 +168,7 @@ class _CardSetState extends State<CardSet> {
                                   ],
                                 ),
                               const SizedBox(height: 12),
-                              
+
                               // The row for delete and edit icons at the bottom of each card
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'result.dart';
@@ -5,15 +6,21 @@ import '../database/database_helper.dart';
 
 class QuizzingPage extends StatefulWidget {
   final int folderId;
+  final String selectedQuestionType;
+  final int totalQuestions;
 
-  const QuizzingPage({super.key, required this.folderId});
+  const QuizzingPage({
+    super.key,
+    required this.folderId,
+    required this.selectedQuestionType,
+    required this.totalQuestions,
+  });
 
   @override
   State<QuizzingPage> createState() => _QuizzingPageState();
 }
 
 class _QuizzingPageState extends State<QuizzingPage> {
-  List<Map<String, dynamic>> cards = [];
   List<Map<String, dynamic>> questions = [];
 
   int currentQuestionIndex = 0;
@@ -29,38 +36,65 @@ class _QuizzingPageState extends State<QuizzingPage> {
   }
 
   Future<void> _loadCards() async {
-    final allCards = await DatabaseHelper().getCards(widget.folderId);
-    if (allCards.length < 5) {
+    final allCards = List<Map<String, dynamic>>.from(await DatabaseHelper().getCards(widget.folderId));
+
+    if (allCards.length < widget.totalQuestions) {
       setState(() {
         isLoading = false;
       });
       return;
     }
 
-    // Shuffle and generate questions with 5 choices each
     final random = Random();
-    for (var card in allCards) {
+    allCards.shuffle(random);
+    final selectedCards = allCards.take(widget.totalQuestions).toList();
+
+    for (var card in selectedCards) {
       final correctMeaning = card['meaning'];
-      final questionText = card['question'];
+      final correctQuestion = card['question'];
+      final cardImage = card['photo'];
 
-      // Get 4 incorrect meanings
-      final incorrectOptions = allCards
-          .where((c) => c['id'] != card['id'] && c['meaning'] != correctMeaning)
-          .map((c) => c['meaning'] as String)
-          .toList();
+      if (widget.selectedQuestionType == "Front") {
+        // FRONT: Show the question, options are meanings
+        final incorrectOptions = allCards
+            .where((c) => c['id'] != card['id'] && c['meaning'] != correctMeaning)
+            .map((c) => c['meaning'] as String)
+            .toList();
 
-      incorrectOptions.shuffle(random);
-      final choices = incorrectOptions.take(4).toList();
-      choices.add(correctMeaning);
-      choices.shuffle(random);
+        incorrectOptions.shuffle(random);
+        final choices = incorrectOptions.take(4).toList();
+        choices.add(correctMeaning);
+        choices.shuffle(random);
 
-      final answerIndex = choices.indexOf(correctMeaning);
+        final answerIndex = choices.indexOf(correctMeaning);
 
-      questions.add({
-        'question': questionText,
-        'options': choices,
-        'answerIndex': answerIndex,
-      });
+        questions.add({
+          'question': correctQuestion,
+          'options': choices,
+          'answerIndex': answerIndex,
+          'image': cardImage,
+        });
+      } else {
+        // BACK: Show the meaning, options are questions
+        final incorrectQuestions = allCards
+            .where((c) => c['id'] != card['id'] && c['question'] != correctQuestion)
+            .map((c) => c['question'] as String)
+            .toList();
+
+        incorrectQuestions.shuffle(random);
+        final choices = incorrectQuestions.take(4).toList();
+        choices.add(correctQuestion);
+        choices.shuffle(random);
+
+        final answerIndex = choices.indexOf(correctQuestion);
+
+        questions.add({
+          'question': correctMeaning,
+          'options': choices,
+          'answerIndex': answerIndex,
+          'image': cardImage,
+        });
+      }
     }
 
     setState(() {
@@ -69,32 +103,29 @@ class _QuizzingPageState extends State<QuizzingPage> {
   }
 
   void _handleAnswer(int selectedIndex) async {
-  final isCorrect = selectedIndex == questions[currentQuestionIndex]['answerIndex'];
-  if (isCorrect) correctAnswers++;
-  userSelections.add(selectedIndex);
+    final isCorrect = selectedIndex == questions[currentQuestionIndex]['answerIndex'];
+    if (isCorrect) correctAnswers++;
+    userSelections.add(selectedIndex);
 
-  if (currentQuestionIndex < questions.length - 1) {
-    setState(() {
-      currentQuestionIndex++;
-    });
-  } else {
-    // Insert score before navigating
-    await DatabaseHelper().insertQuizScore(widget.folderId, correctAnswers);
+    if (currentQuestionIndex < questions.length - 1) {
+      setState(() {
+        currentQuestionIndex++;
+      });
+    } else {
+      await DatabaseHelper().insertQuizScore(widget.folderId, correctAnswers);
 
-    // Navigate to results
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (_) => ResultsPage(
-          folderId: widget.folderId,
-          correct: correctAnswers,
-          total: questions.length,
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ResultsPage(
+            folderId: widget.folderId,
+            correct: correctAnswers,
+            total: questions.length,
+          ),
         ),
-      ),
-    );
+      );
+    }
   }
-}
-
 
   @override
   Widget build(BuildContext context) {
@@ -105,8 +136,19 @@ class _QuizzingPageState extends State<QuizzingPage> {
     }
 
     if (questions.isEmpty) {
-      return const Scaffold(
-        body: Center(child: Text('Not enough cards to generate quiz.')),
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text("Quiz"),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          ),
+        ),
+        body: const Center(
+          child: Text('Not enough cards to generate quiz.'),
+        ),
       );
     }
 
@@ -125,11 +167,30 @@ class _QuizzingPageState extends State<QuizzingPage> {
               style: const TextStyle(fontSize: 18),
             ),
             const SizedBox(height: 20),
-            Text(
-              question['question'],
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+
+            // Show image if available
+            if (question['image'] != null && question['image'].toString().isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 20),
+                child: Image.file(
+                  File(question['image']),
+                  height: 200,
+                  fit: BoxFit.contain,
+                ),
+              ),
+
+            // Centered question
+            Center(
+              child: Text(
+                question['question'],
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              ),
             ),
+
             const SizedBox(height: 30),
+
+            // Multiple choice options
             ...List.generate(options.length, (index) {
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8.0),

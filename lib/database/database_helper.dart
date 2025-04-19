@@ -19,9 +19,9 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 3,  // Increment the version number for migration
+      version: 4, // Updated version
       onCreate: _onCreate,
-      onUpgrade: _onUpgrade,  // Handle upgrading the database schema
+      onUpgrade: _onUpgrade,
       onOpen: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
@@ -41,7 +41,6 @@ class DatabaseHelper {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         folder_id INTEGER,
         question TEXT,
-        answer TEXT,
         meaning TEXT,
         memo TEXT,
         photo TEXT,
@@ -62,13 +61,36 @@ class DatabaseHelper {
     print("Database created with 'folders', 'cards', and 'quiz_scores' tables");
   }
 
-  // Database Upgrade Logic
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
-      // Add the 'photo' column if upgrading from version 1 to version 2
+      await db.execute('ALTER TABLE cards ADD COLUMN photo TEXT');
+    }
+
+    if (oldVersion < 3) {
+      await db.execute('ALTER TABLE cards ADD COLUMN meaning TEXT');
+    }
+
+    if (oldVersion < 4) {
+      await db.execute('ALTER TABLE cards RENAME TO cards_old');
+
       await db.execute('''
-        ALTER TABLE cards ADD COLUMN photo TEXT;
+        CREATE TABLE cards (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          folder_id INTEGER,
+          question TEXT,
+          meaning TEXT,
+          memo TEXT,
+          photo TEXT,
+          FOREIGN KEY (folder_id) REFERENCES folders (id) ON DELETE CASCADE
+        )
       ''');
+
+      await db.execute('''
+        INSERT INTO cards (id, folder_id, question, meaning, memo, photo)
+        SELECT id, folder_id, question, meaning, memo, photo FROM cards_old
+      ''');
+
+      await db.execute('DROP TABLE cards_old');
     }
   }
 
@@ -100,15 +122,21 @@ class DatabaseHelper {
   }
 
   // ─── Card CRUD ───────────────────────────────────────────────────────────────
-  Future<int> insertCard(int folderId, String question, String answer,String meaning,String memo, {String? photo}) async {
+
+  Future<int> insertCard(
+    int folderId,
+    String question,
+    String meaning,
+    String memo, {
+    String? photo,
+  }) async {
     final db = await database;
     return await db.insert('cards', {
       'folder_id': folderId,
       'question': question,
-      'answer': answer,
       'meaning': meaning,
       'memo': memo,
-      'photo': photo ?? null,  // Allow photo to be null
+      'photo': photo ?? null,
     });
   }
 
@@ -117,16 +145,21 @@ class DatabaseHelper {
     return await db.query('cards', where: 'folder_id = ?', whereArgs: [folderId]);
   }
 
-  Future<int> updateCard(int id, String question, String answer,String meaning,String memo, {String? photo}) async {
+  Future<int> updateCard(
+    int id,
+    String question,
+    String meaning,
+    String memo, {
+    String? photo,
+  }) async {
     final db = await database;
     return await db.update(
       'cards',
       {
         'question': question,
-        'answer': answer,
         'meaning': meaning,
         'memo': memo,
-        'photo': photo ?? null,  // Allow photo to be null
+        'photo': photo ?? null,
       },
       where: 'id = ?',
       whereArgs: [id],
@@ -137,7 +170,7 @@ class DatabaseHelper {
     final db = await database;
     return await db.delete('cards', where: 'id = ?', whereArgs: [id]);
   }
-  
+
   // ─── Quiz Scores ─────────────────────────────────────────────────────────────
 
   Future<int> insertQuizScore(int folderId, int score) async {

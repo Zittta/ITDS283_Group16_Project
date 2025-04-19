@@ -21,7 +21,7 @@ class ResultsPage extends StatefulWidget {
 
 class _ResultsPageState extends State<ResultsPage> {
   List<Map<String, dynamic>> scoreHistory = [];
-  String folderName = "";  // This will store the folder name
+  String folderName = ""; // This will store the folder name
 
   @override
   void initState() {
@@ -33,9 +33,12 @@ class _ResultsPageState extends State<ResultsPage> {
   // Fetch the folder name from the database using folderId
   Future<void> _loadFolderName() async {
     final folders = await DatabaseHelper().getFolders();
-    final folder = folders.firstWhere((folder) => folder['id'] == widget.folderId, orElse: () => {});
+    final folder = folders.firstWhere(
+        (folder) => folder['id'] == widget.folderId,
+        orElse: () => {});
     setState(() {
-      folderName = folder['name'] ?? "Unknown Folder"; // Set folder name or fallback
+      folderName =
+          folder['name'] ?? "Unknown Folder"; // Set folder name or fallback
     });
   }
 
@@ -48,8 +51,10 @@ class _ResultsPageState extends State<ResultsPage> {
 
   String formatDateTime(String timestamp) {
     final dt = DateTime.parse(timestamp);
-    final date = '${dt.day.toString().padLeft(2, '0')}-${dt.month.toString().padLeft(2, '0')}-${dt.year}';
-    final time = '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}:${dt.second.toString().padLeft(2, '0')}';
+    final date =
+        '${dt.day.toString().padLeft(2, '0')}-${dt.month.toString().padLeft(2, '0')}-${dt.year}';
+    final time =
+        '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}:${dt.second.toString().padLeft(2, '0')}';
     return '$date||$time';
   }
 
@@ -68,19 +73,15 @@ class _ResultsPageState extends State<ResultsPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Your Results"),
-        elevation: 0, // No elevation for a flat app bar
+        elevation: 0,
         actions: [
           IconButton(
-            icon: Icon(Icons.home),
+            icon: const Icon(Icons.home),
             onPressed: () {
-              Navigator.pushReplacement(
+              Navigator.pushNamedAndRemoveUntil(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => Quiz(
-                    folderId: widget.folderId,
-                    folderName: folderName,  // Use the fetched folder name
-                  ),
-                ),
+                '/folders',
+                (route) => false, // This clears the back stack
               );
             },
           ),
@@ -94,14 +95,21 @@ class _ResultsPageState extends State<ResultsPage> {
             children: [
               Text(
                 "Quiz Completed!",
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                style: Theme.of(context)
+                    .textTheme
+                    .headlineSmall
+                    ?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 20),
               PieChart(
                 dataMap: dataMap,
                 chartRadius: 150,
-                colorList: [colorScheme.primary, colorScheme.error],  // Fixed the error color usage here
-                legendOptions: const LegendOptions(legendPosition: LegendPosition.bottom),
+                colorList: [
+                  colorScheme.primary,
+                  colorScheme.error
+                ], // Fixed the error color usage here
+                legendOptions:
+                    const LegendOptions(legendPosition: LegendPosition.bottom),
                 chartValuesOptions: const ChartValuesOptions(
                   showChartValuesInPercentage: true,
                 ),
@@ -115,7 +123,10 @@ class _ResultsPageState extends State<ResultsPage> {
               const SizedBox(height: 30),
               Text(
                 "History Score",
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                style: Theme.of(context)
+                    .textTheme
+                    .titleLarge
+                    ?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 10),
               // Scrollable score history only
@@ -139,18 +150,25 @@ class _ResultsPageState extends State<ResultsPage> {
                           Expanded(
                             flex: 3,
                             child: Text(parts[0],
-                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.copyWith(fontWeight: FontWeight.w600)),
                           ),
                           Expanded(
                             flex: 2,
-                            child: Text(parts[1], style: Theme.of(context).textTheme.bodyMedium),
+                            child: Text(parts[1],
+                                style: Theme.of(context).textTheme.bodyMedium),
                           ),
                           Expanded(
                             flex: 2,
                             child: Text(
                               "Score: ${row['score']}",
                               textAlign: TextAlign.end,
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium
+                                  ?.copyWith(fontWeight: FontWeight.w500),
                             ),
                           ),
                         ],
@@ -162,14 +180,17 @@ class _ResultsPageState extends State<ResultsPage> {
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
-                  Navigator.pushReplacement(
+                  // Use pushAndRemoveUntil to clear the navigation stack and go directly to Quiz
+                  Navigator.pushAndRemoveUntil(
                     context,
                     MaterialPageRoute(
                       builder: (context) => Quiz(
                         folderId: widget.folderId,
-                        folderName: folderName,  // Use the fetched folder name
+                        folderName: folderName,
                       ),
                     ),
+                    (route) =>
+                        false, // This removes all previous routes in the stack
                   );
                 },
                 style: ElevatedButton.styleFrom(

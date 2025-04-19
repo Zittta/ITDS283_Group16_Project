@@ -200,7 +200,7 @@ class _FoldersState extends State<Folders> {
             theme.appBarTheme.backgroundColor ?? theme.colorScheme.surface,
         elevation: 0,
         title: Text(
-          'Flash Cards',
+          'FlashZzcards',
           style: TextStyle(color: theme.textTheme.titleLarge?.color),
         ),
         actions: [

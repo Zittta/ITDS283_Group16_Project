@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'quizzing.dart';
+import '../database/database_helper.dart';
 
 class Quiz extends StatefulWidget {
   final int folderId;
@@ -13,7 +14,7 @@ class Quiz extends StatefulWidget {
 
 class _QuizState extends State<Quiz> {
   String? selectedQuestionType = "Front"; // Default value
-  int selectedNumberOfQuestions = 5; // Default number
+  int? selectedNumberOfQuestions = 5; // Now allows "All" as null
 
   @override
   Widget build(BuildContext context) {
@@ -22,6 +23,16 @@ class _QuizState extends State<Quiz> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              '/folders',
+              (route) => false,
+            );
+          },
+        ),
         title: const Text("Let's get Started!"),
       ),
       body: Center(
@@ -35,7 +46,9 @@ class _QuizState extends State<Quiz> {
                 Text(
                   folderName,
                   style: const TextStyle(
-                      fontSize: 28, fontWeight: FontWeight.bold),
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 40),
 
@@ -79,17 +92,17 @@ class _QuizState extends State<Quiz> {
                 const SizedBox(height: 20),
 
                 // Dropdown
-                DropdownButton<int>(
+                DropdownButton<int?>(
                   value: selectedNumberOfQuestions,
                   onChanged: (int? newValue) {
                     setState(() {
-                      selectedNumberOfQuestions = newValue!;
+                      selectedNumberOfQuestions = newValue;
                     });
                   },
-                  items: [5, 10, 15, 20].map((value) {
-                    return DropdownMenuItem<int>(
+                  items: [5, 10, 15, null].map((value) {
+                    return DropdownMenuItem<int?>(
                       value: value,
-                      child: Text("$value"),
+                      child: Text(value == null ? "All" : "$value"),
                     );
                   }).toList(),
                 ),
@@ -97,12 +110,41 @@ class _QuizState extends State<Quiz> {
 
                 // Start Button
                 ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
+                    final allCards = await DatabaseHelper().getCards(folderId);
+
+                    final numCardsAvailable = allCards.length;
+                    final numQuestions =
+                        selectedNumberOfQuestions ?? numCardsAvailable;
+
+                    if (numCardsAvailable < numQuestions) {
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text("Not Enough Cards"),
+                          content: Text(
+                            "You selected $numQuestions questions, but only $numCardsAvailable cards are available in this folder.",
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text("OK"),
+                            ),
+                          ],
+                        ),
+                      );
+                      return;
+                    }
+
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) =>
-                            QuizzingPage(folderId: folderId),
+                        builder: (context) => QuizzingPage(
+                          folderId: folderId,
+                          selectedQuestionType:
+                              selectedQuestionType ?? "Front",
+                          totalQuestions: numQuestions,
+                        ),
                       ),
                     );
                   },

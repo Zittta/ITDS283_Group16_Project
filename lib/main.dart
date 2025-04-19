@@ -30,6 +30,7 @@ class MyApp extends StatelessWidget {
             home: Folders(),
             routes: {
               '/setting': (context) => Setting(),
+              '/folders': (context) => Folders(),
             },
           );
         },
