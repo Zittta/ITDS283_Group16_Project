@@ -89,15 +89,15 @@ class _FoldersState extends State<Folders> {
     );
   }
 
-  void _showChangeFolderNameDialog(int index) {
-    _controller.text = folders[index]['name'];
+  void _showChangeFolderNameDialog(Map<String, dynamic> folder) {
+    _controller.text = folder['name'];
     showDialog(
       context: context,
-      builder: (context) => _buildChangeFolderNameDialog(index),
+      builder: (context) => _buildChangeFolderNameDialog(folder),
     );
   }
 
-  Widget _buildChangeFolderNameDialog(int index) {
+  Widget _buildChangeFolderNameDialog(Map<String, dynamic> folder) {
     final theme = Theme.of(context);
 
     return Dialog(
@@ -136,7 +136,7 @@ class _FoldersState extends State<Folders> {
                     onPressed: () async {
                       if (_controller.text.trim().isEmpty) return;
                       await DatabaseHelper().updateFolder(
-                        folders[index]['id'],
+                        folder['id'],
                         _controller.text.trim(),
                       );
                       _controller.clear();
@@ -175,7 +175,7 @@ class _FoldersState extends State<Folders> {
                     );
 
                     if (shouldDelete == true) {
-                      await DatabaseHelper().deleteFolder(folders[index]['id']);
+                      await DatabaseHelper().deleteFolder(folder['id']);
                       Navigator.of(context).pop();
                       _loadFolders();
                     }
@@ -188,7 +188,7 @@ class _FoldersState extends State<Folders> {
       ),
     );
   }
-
+  
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -200,7 +200,7 @@ class _FoldersState extends State<Folders> {
             theme.appBarTheme.backgroundColor ?? theme.colorScheme.surface,
         elevation: 0,
         title: Text(
-          'FlashZzcards',
+          'FlashZzCards',
           style: TextStyle(color: theme.textTheme.titleLarge?.color),
         ),
         actions: [
@@ -213,116 +213,131 @@ class _FoldersState extends State<Folders> {
         ],
       ),
       body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Container(
-            color: theme.colorScheme.secondary.withOpacity(0.1),
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              children: [
-                Icon(Icons.folder, size: 28, color: theme.iconTheme.color),
-                const SizedBox(width: 8),
-                Text(
-                  'Folders',
-                  style: theme.textTheme.titleMedium
-                      ?.copyWith(fontWeight: FontWeight.bold),
-                ),
-              ],
+          const Divider(height: 1, thickness: 1),
+          const SizedBox(height: 12),
+          Text(
+            'Folders',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
             ),
           ),
-          const Divider(height: 1),
+          const Divider(thickness: 1),
           Expanded(
-            child: Padding(
+            child: ListView(
               padding: const EdgeInsets.all(16.0),
-              child: folders.isEmpty
-                  ? _buildEmptyMessage(theme)
-                  : _buildFolderList(theme),
+              children: [
+                // New Folder Card - With the same container style as folder cards
+                InkWell(
+                  onTap: _showCreateFolderDialog,
+                  child: Container(
+                    width: double.infinity,
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: theme.cardColor,
+                      border: Border.all(color: theme.dividerColor),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 32.0),
+                          child: Column(
+                            children: [
+                              Icon(Icons.add, size: 32, color: theme.iconTheme.color),
+                              const SizedBox(height: 8),
+                              Text('New Folder', style: theme.textTheme.bodyMedium),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                // Display folders
+                ...folders.map((folder) => _buildFolderCard(theme, folder)).toList(),
+                if (folders.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 24.0),
+                    child: Center(
+                      child: Text(
+                        "There are no folders to display.\nPlease press 'New Folder' to create a folder",
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showCreateFolderDialog,
-        backgroundColor: theme.colorScheme.primaryContainer,
-        icon: Icon(Icons.add, color: theme.iconTheme.color),
-        label: Text(
-          'New Folder',
-          style: theme.textTheme.labelLarge,
-        ),
-      ),
     );
   }
 
-  Widget _buildEmptyMessage(ThemeData theme) {
-    return Center(
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceVariant,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Text(
-          "There are no folders to display.\nPlease press 'New Folder' to create a folder",
-          textAlign: TextAlign.center,
-          style: theme.textTheme.bodyMedium,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFolderList(ThemeData theme) {
+  Widget _buildFolderCard(ThemeData theme, Map<String, dynamic> folder) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: theme.cardColor,
         border: Border.all(color: theme.dividerColor),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
       ),
-      child: ListView.builder(
-        itemCount: folders.length,
-        itemBuilder: (context, index) {
-          final folder = folders[index];
-          return ListTile(
-            leading: Icon(Icons.folder, color: theme.iconTheme.color),
-            title: Text(folder['name'], style: theme.textTheme.bodyLarge),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => CardSet(
-                    folderId: folder['id'], // Pass folder ID
-                    folderName: folder['name'], // Pass folder name
-                  ),
-                ),
-              );
-            },
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: Icon(Icons.quiz, color: theme.iconTheme.color),
-                  onPressed: () {
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => Quiz(
+                        builder: (context) => CardSet(
                           folderId: folder['id'],
                           folderName: folder['name'],
                         ),
                       ),
                     );
                   },
+                  child: Text(
+                    folder['name'],
+                    style: theme.textTheme.titleMedium,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-                IconButton(
-                  icon: Icon(Icons.more_vert, color: theme.iconTheme.color),
-                  onPressed: () {
-                    _showChangeFolderNameDialog(index);
-                  },
+              ),
+              IconButton(
+                icon: Icon(Icons.more_vert, color: theme.iconTheme.color),
+                onPressed: () => _showChangeFolderNameDialog(folder),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => Quiz(
+                    folderId: folder['id'],
+                    folderName: folder['name'],
+                  ),
                 ),
-              ],
+              );
+            },
+            icon: const Icon(Icons.quiz_outlined),
+            label: const Text('Start Quiz'),
+            style: ElevatedButton.styleFrom(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
-          );
-        },
+          ),
+        ],
       ),
     );
   }
