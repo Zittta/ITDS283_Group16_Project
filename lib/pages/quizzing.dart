@@ -36,7 +36,8 @@ class _QuizzingPageState extends State<QuizzingPage> {
   }
 
   Future<void> _loadCards() async {
-    final allCards = List<Map<String, dynamic>>.from(await DatabaseHelper().getCards(widget.folderId));
+    final allCards = List<Map<String, dynamic>>.from(
+        await DatabaseHelper().getCards(widget.folderId));
 
     if (allCards.length < widget.totalQuestions) {
       setState(() {
@@ -55,9 +56,9 @@ class _QuizzingPageState extends State<QuizzingPage> {
       final cardImage = card['photo'];
 
       if (widget.selectedQuestionType == "Front") {
-        // FRONT: Show the question, options are meanings
         final incorrectOptions = allCards
-            .where((c) => c['id'] != card['id'] && c['meaning'] != correctMeaning)
+            .where(
+                (c) => c['id'] != card['id'] && c['meaning'] != correctMeaning)
             .map((c) => c['meaning'] as String)
             .toList();
 
@@ -75,9 +76,9 @@ class _QuizzingPageState extends State<QuizzingPage> {
           'image': cardImage,
         });
       } else {
-        // BACK: Show the meaning, options are questions
         final incorrectQuestions = allCards
-            .where((c) => c['id'] != card['id'] && c['question'] != correctQuestion)
+            .where((c) =>
+                c['id'] != card['id'] && c['question'] != correctQuestion)
             .map((c) => c['question'] as String)
             .toList();
 
@@ -103,7 +104,8 @@ class _QuizzingPageState extends State<QuizzingPage> {
   }
 
   void _handleAnswer(int selectedIndex) async {
-    final isCorrect = selectedIndex == questions[currentQuestionIndex]['answerIndex'];
+    final isCorrect =
+        selectedIndex == questions[currentQuestionIndex]['answerIndex'];
     if (isCorrect) correctAnswers++;
     userSelections.add(selectedIndex);
 
@@ -141,9 +143,7 @@ class _QuizzingPageState extends State<QuizzingPage> {
           title: const Text("Quiz"),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
-            onPressed: () {
-              Navigator.pop(context);
-            },
+            onPressed: () => Navigator.pop(context),
           ),
         ),
         body: const Center(
@@ -157,51 +157,76 @@ class _QuizzingPageState extends State<QuizzingPage> {
 
     return Scaffold(
       appBar: AppBar(title: const Text("Quiz")),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              'Question ${currentQuestionIndex + 1}/${questions.length}',
-              style: const TextStyle(fontSize: 18),
-            ),
-            const SizedBox(height: 20),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final screenHeight = constraints.maxHeight;
 
-            // Show image if available
-            if (question['image'] != null && question['image'].toString().isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 20),
-                child: Image.file(
-                  File(question['image']),
-                  height: 200,
-                  fit: BoxFit.contain,
+          return Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                Text(
+                  'Question ${currentQuestionIndex + 1}/${questions.length}',
+                  style: const TextStyle(fontSize: 16),
                 ),
-              ),
+                const SizedBox(height: 8),
 
-            // Centered question
-            Center(
-              child: Text(
-                question['question'],
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-              ),
-            ),
+                // Image section with dynamic height
+                if (question['image'] != null &&
+                    question['image'].toString().isNotEmpty)
+                  Container(
+                    height: screenHeight * 0.25,
+                    margin: const EdgeInsets.symmetric(vertical: 10),
+                    child: Image.file(
+                      File(question['image']),
+                      fit: BoxFit.contain,
+                    ),
+                  ),
 
-            const SizedBox(height: 30),
-
-            // Multiple choice options
-            ...List.generate(options.length, (index) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: ElevatedButton(
-                  onPressed: () => _handleAnswer(index),
-                  child: Text(options[index]),
+                // Question text
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: Text(
+                    question['question'],
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                        fontSize: 20, fontWeight: FontWeight.bold),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-              );
-            }),
-          ],
-        ),
+
+                const SizedBox(height: 8),
+
+                // Options using Expanded to fill remaining space
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(options.length, (index) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4.0),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                            onPressed: () => _handleAnswer(index),
+                            child: Text(
+                              options[index],
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

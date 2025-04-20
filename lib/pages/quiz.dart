@@ -57,31 +57,43 @@ class _QuizState extends State<Quiz> {
                     style: TextStyle(fontSize: 18)),
                 const SizedBox(height: 20),
 
-                // Radio buttons
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                // Radio buttons (Wrap to avoid overflow)
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 30,
+                  runSpacing: 8,
                   children: [
-                    Radio<String>(
-                      value: "Front",
-                      groupValue: selectedQuestionType,
-                      onChanged: (value) {
-                        setState(() {
-                          selectedQuestionType = value;
-                        });
-                      },
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Radio<String>(
+                          value: "Front",
+                          groupValue: selectedQuestionType,
+                          onChanged: (value) {
+                            setState(() {
+                              selectedQuestionType = value;
+                            });
+                          },
+                        ),
+                        const Text("Front Question"),
+                      ],
                     ),
-                    const Text("Front Question"),
-                    const SizedBox(width: 30),
-                    Radio<String>(
-                      value: "Back",
-                      groupValue: selectedQuestionType,
-                      onChanged: (value) {
-                        setState(() {
-                          selectedQuestionType = value;
-                        });
-                      },
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Radio<String>(
+                          value: "Back",
+                          groupValue: selectedQuestionType,
+                          onChanged: (value) {
+                            setState(() {
+                              selectedQuestionType = value;
+                            });
+                          },
+                        ),
+                        const Text("Back Question"),
+                      ],
                     ),
-                    const Text("Back Question"),
                   ],
                 ),
                 const SizedBox(height: 40),
